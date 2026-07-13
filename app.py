@@ -1,37 +1,41 @@
 from flask import Flask, request, render_template_string
-import random
+import requests
+import json
 
 app = Flask(__name__)
 
-# بنك ردود ذكية
-responses = {
-    "مرحبا": ["أهلاً بك! 🌟", "مرحباً! يسعدني وجودك."],
-    "كيف": ["أنا بخير، شكراً!", "كل شيء تمام!"],
-    "الذكاء الاصطناعي": ["🧠 هو محاكاة العقل البشري.", "🤖 هو مستقبل التكنولوجيا."],
-    "بايثون": ["🐍 لغة برمجة سهلة وقوية.", "بايثون تستخدم في الذكاء الاصطناعي."],
-    "فلسطين": ["🇵🇸 فلسطين أرض عربية، القدس عاصمتها.", "🕊️ نتمنى السلام لفلسطين."],
-    "غزة": ["🇵🇸 غزة صامدة، نتمنى السلام لأهلها.", "💔 غزة تحتاج لدعم العالم."],
-    "عدد سكان": ["🌍 عدد سكان الأرض 8.1 مليار.", "📊 آخر إحصائية 8.1 مليار نسمة."],
-    "الوقت": ["🕐 الوقت الآن يعتمد على منطقتك.", "⏰ تحقق من الساعة في هاتفك."],
-    "طقس": ["☀️ الطقس يختلف حسب المنطقة.", "🌧️ تحقق من تطبيق الطقس المحلي."],
-}
+# ============================================
+# مفتاح Google Gemini API (تم التحديث)
+# ============================================
+GEMINI_API_KEY = "AQ.Ab8RN6JI7Dg68obEoHFDXMG6jdshJKmebUGJdjM5wCoQAWCz4Q"
 
-def get_response(text):
-    text_lower = text.lower()
-    for key in responses:
-        if key in text_lower:
-            return random.choice(responses[key])
-    return random.choice([
-        "🤔 سؤال جميل! لكني لا أملك إجابة محددة.",
-        "😅 اسألني عن: فلسطين، غزة، بايثون، ذكاء اصطناعي، أو مرحبا.",
-        "🤖 جرب تسأل بطريقة أوضح."
-    ])
+# ============================================
+# دالة الاتصال بـ Gemini API
+# ============================================
+def ask_gemini(prompt):
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        if response.status_code == 200:
+            data = response.json()
+            if "candidates" in data:
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+        return f"⚠️ خطأ: {response.status_code}"
+    except Exception as e:
+        return f"❌ فشل الاتصال: {str(e)}"
 
+# ============================================
+# واجهة الموقع
+# ============================================
 HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Writer Pro</title>
+    <title>AI Writer Pro - Gemini</title>
     <style>
         body{font-family:sans-serif;background:#0f0c29;color:white;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
         .container{background:rgba(255,255,255,0.1);padding:40px;border-radius:20px;max-width:600px;width:100%}
@@ -42,7 +46,7 @@ HTML = """
 </head>
 <body>
 <div class="container">
-    <h2>🤖 AI Writer Pro</h2>
+    <h2>🤖 AI Writer Pro (Gemini)</h2>
     <form method="POST">
         <textarea name="text" placeholder="اكتب أي سؤال..."></textarea>
         <button type="submit">🚀 اسأل</button>
@@ -61,7 +65,7 @@ def index():
     if request.method == "POST":
         text = request.form.get("text")
         if text:
-            result = get_response(text)
+            result = ask_gemini(text)
     return render_template_string(HTML, result=result)
 
 if __name__ == "__main__":
