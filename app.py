@@ -1,9 +1,31 @@
 from flask import Flask, request, render_template_string
-import requests
+import random
 
 app = Flask(__name__)
 
-API_TOKEN = "hf_put_your_token_here"  # غير هذا بالمفتاح
+# بنك ردود ذكية
+responses = {
+    "مرحبا": ["أهلاً بك! 🌟", "مرحباً! يسعدني وجودك."],
+    "كيف": ["أنا بخير، شكراً!", "كل شيء تمام!"],
+    "الذكاء الاصطناعي": ["🧠 هو محاكاة العقل البشري.", "🤖 هو مستقبل التكنولوجيا."],
+    "بايثون": ["🐍 لغة برمجة سهلة وقوية.", "بايثون تستخدم في الذكاء الاصطناعي."],
+    "فلسطين": ["🇵🇸 فلسطين أرض عربية، القدس عاصمتها.", "🕊️ نتمنى السلام لفلسطين."],
+    "غزة": ["🇵🇸 غزة صامدة، نتمنى السلام لأهلها.", "💔 غزة تحتاج لدعم العالم."],
+    "عدد سكان": ["🌍 عدد سكان الأرض 8.1 مليار.", "📊 آخر إحصائية 8.1 مليار نسمة."],
+    "الوقت": ["🕐 الوقت الآن يعتمد على منطقتك.", "⏰ تحقق من الساعة في هاتفك."],
+    "طقس": ["☀️ الطقس يختلف حسب المنطقة.", "🌧️ تحقق من تطبيق الطقس المحلي."],
+}
+
+def get_response(text):
+    text_lower = text.lower()
+    for key in responses:
+        if key in text_lower:
+            return random.choice(responses[key])
+    return random.choice([
+        "🤔 سؤال جميل! لكني لا أملك إجابة محددة.",
+        "😅 اسألني عن: فلسطين، غزة، بايثون، ذكاء اصطناعي، أو مرحبا.",
+        "🤖 جرب تسأل بطريقة أوضح."
+    ])
 
 HTML = """
 <!DOCTYPE html>
@@ -33,26 +55,13 @@ HTML = """
 </html>
 """
 
-def ask_ai(prompt):
-    url = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
-    headers = {"Authorization": f"Bearer {API_TOKEN}"}
-    try:
-        r = requests.post(url, headers=headers, json={"inputs": prompt}, timeout=30)
-        if r.status_code == 200:
-            data = r.json()
-            if isinstance(data, list) and len(data) > 0:
-                return data[0].get("generated_text", "ما في رد")
-        return f"خطأ: {r.status_code}"
-    except Exception as e:
-        return f"فشل: {str(e)}"
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
     if request.method == "POST":
         text = request.form.get("text")
         if text:
-            result = ask_ai(text)
+            result = get_response(text)
     return render_template_string(HTML, result=result)
 
 if __name__ == "__main__":
