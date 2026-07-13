@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 # ============================================
-# مفتاح HuggingFace API (الموجود عندك)
+# مفتاح HuggingFace API
 # ============================================
 HUGGINGFACE_API_KEY = "AQ.Ab8RN6LS8QCs0Eg4cg8zueyJSrQorzHP7tKlkS_lP187RG63Og"
 
