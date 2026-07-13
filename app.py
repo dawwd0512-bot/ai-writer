@@ -5,15 +5,16 @@ import json
 app = Flask(__name__)
 
 # ============================================
-# مفتاح Google Gemini API (تم التحديث)
+# مفتاح Google Gemini API (ضع المفتاح الصحيح هنا)
 # ============================================
-GEMINI_API_KEY = "AQ.Ab8RN6JI7Dg68obEoHFDXMG6jdshJKmebUGJdjM5wCoQAWCz4Q"
+GEMINI_API_KEY = "AQ.Ab8RN6LS8QCs0Eg4cg8zueyJSrQorzHP7tKlkS_lP187RG63Og"  # استبدل هذا بالمفتاح الحقيقي
 
 # ============================================
-# دالة الاتصال بـ Gemini API
+# دالة الاتصال بـ Gemini API (نسخة معدلة)
 # ============================================
 def ask_gemini(prompt):
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+    # استخدام الإصدار v1beta مع نموذج gemini-1.5-flash
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     headers = {"Content-Type": "application/json"}
     payload = {
         "contents": [{"parts": [{"text": prompt}]}]
@@ -24,12 +25,12 @@ def ask_gemini(prompt):
             data = response.json()
             if "candidates" in data:
                 return data["candidates"][0]["content"]["parts"][0]["text"]
-        return f"⚠️ خطأ: {response.status_code}"
+        return f"⚠️ خطأ: {response.status_code} - {response.text}"
     except Exception as e:
         return f"❌ فشل الاتصال: {str(e)}"
 
 # ============================================
-# واجهة الموقع
+# واجهة الموقع (نفس التصميم)
 # ============================================
 HTML = """
 <!DOCTYPE html>
@@ -46,7 +47,7 @@ HTML = """
 </head>
 <body>
 <div class="container">
-    <h2>🤖 AI Writer Pro (Gemini)</h2>
+    <h2>🤖 AI Writer Pro (Gemini 1.5 Flash)</h2>
     <form method="POST">
         <textarea name="text" placeholder="اكتب أي سؤال..."></textarea>
         <button type="submit">🚀 اسأل</button>
