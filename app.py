@@ -1,42 +1,38 @@
 from flask import Flask, request, render_template_string
 import requests
-import json
 
 app = Flask(__name__)
 
 # ============================================
-# مفتاح Google Gemini API (ضع المفتاح الصحيح هنا)
+# مفتاح HuggingFace API (الموجود عندك)
 # ============================================
-GEMINI_API_KEY = "AQ.Ab8RN6LS8QCs0Eg4cg8zueyJSrQorzHP7tKlkS_lP187RG63Og"  # استبدل هذا بالمفتاح الحقيقي
+HUGGINGFACE_API_KEY = "AQ.Ab8RN6LS8QCs0Eg4cg8zueyJSrQorzHP7tKlkS_lP187RG63Og"
 
 # ============================================
-# دالة الاتصال بـ Gemini API (نسخة معدلة)
+# دالة الاتصال بـ HuggingFace API
 # ============================================
-def ask_gemini(prompt):
-    # استخدام الإصدار v1beta مع نموذج gemini-1.5-flash
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    headers = {"Content-Type": "application/json"}
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}]
-    }
+def ask_ai(prompt):
+    url = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
+    headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+    payload = {"inputs": prompt}
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=30)
         if response.status_code == 200:
             data = response.json()
-            if "candidates" in data:
-                return data["candidates"][0]["content"]["parts"][0]["text"]
+            if isinstance(data, list) and len(data) > 0:
+                return data[0].get("generated_text", "ما في رد")
         return f"⚠️ خطأ: {response.status_code} - {response.text}"
     except Exception as e:
         return f"❌ فشل الاتصال: {str(e)}"
 
 # ============================================
-# واجهة الموقع (نفس التصميم)
+# واجهة الموقع
 # ============================================
 HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Writer Pro - Gemini</title>
+    <title>AI Writer Pro - HuggingFace</title>
     <style>
         body{font-family:sans-serif;background:#0f0c29;color:white;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
         .container{background:rgba(255,255,255,0.1);padding:40px;border-radius:20px;max-width:600px;width:100%}
@@ -47,7 +43,7 @@ HTML = """
 </head>
 <body>
 <div class="container">
-    <h2>🤖 AI Writer Pro (Gemini 1.5 Flash)</h2>
+    <h2>🤖 AI Writer Pro (HuggingFace)</h2>
     <form method="POST">
         <textarea name="text" placeholder="اكتب أي سؤال..."></textarea>
         <button type="submit">🚀 اسأل</button>
@@ -66,7 +62,7 @@ def index():
     if request.method == "POST":
         text = request.form.get("text")
         if text:
-            result = ask_gemini(text)
+            result = ask_ai(text)
     return render_template_string(HTML, result=result)
 
 if __name__ == "__main__":
